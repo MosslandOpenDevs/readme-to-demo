@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect width="1200" height="700" fill="#0f1220"/>
+  <text x="100" y="100" fill="#8ab4ff" font-size="34" font-family="Arial">Structured Extraction</text>
+  <rect x="100" y="140" width="300" height="150" rx="16" fill="#18223d" stroke="#435581"/>
+  <rect x="450" y="140" width="300" height="150" rx="16" fill="#18223d" stroke="#435581"/>
+  <rect x="800" y="140" width="300" height="150" rx="16" fill="#18223d" stroke="#435581"/>
+  <text x="135" y="200" fill="#ffffff" font-size="24" font-family="Arial">Installation</text>
+  <text x="485" y="200" fill="#ffffff" font-size="24" font-family="Arial">Usage</text>
+  <text x="835" y="200" fill="#ffffff" font-size="24" font-family="Arial">Screenshots</text>
+  <rect x="100" y="360" width="1000" height="210" rx="18" fill="#171c2f" stroke="#3c4972"/>
+  <text x="135" y="430" fill="#dce6ff" font-size="22" font-family="Arial">FAQ candidates and cleanup suggestions are collected automatically.</text>
+</svg>

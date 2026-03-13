@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run conversion smoke test
+        run: |
+          cat > sample.md <<'DOC'
+          # Sample Project
+          
+          A small project.
+          
+          ## Installation
+          ```bash
+          npm install
+          ```
+          
+          ## Usage
+          ```bash
+          npm run dev
+          ```
+          DOC
+          PYTHONPATH=src python3 -m readme_to_demo.cli convert sample.md --output out.md
+          test -f out.md
+          grep -q "Project Summary" out.md

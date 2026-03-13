@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect width="1200" height="700" fill="#0f1220"/>
+  <rect x="70" y="60" width="1060" height="580" rx="24" fill="#171c2f" stroke="#39446a"/>
+  <text x="110" y="120" fill="#8ab4ff" font-size="34" font-family="Arial">Demo-ready Output</text>
+  <text x="110" y="190" fill="#ffffff" font-size="26" font-family="Arial"># Demo Brief</text>
+  <text x="110" y="250" fill="#dce6ff" font-size="20" font-family="Arial">• Project Summary</text>
+  <text x="110" y="290" fill="#dce6ff" font-size="20" font-family="Arial">• Installation</text>
+  <text x="110" y="330" fill="#dce6ff" font-size="20" font-family="Arial">• Usage</text>
+  <text x="110" y="370" fill="#dce6ff" font-size="20" font-family="Arial">• Screenshot Assets</text>
+  <text x="110" y="410" fill="#dce6ff" font-size="20" font-family="Arial">• FAQ Candidates</text>
+  <text x="110" y="450" fill="#dce6ff" font-size="20" font-family="Arial">• Maintainer Cleanup Suggestions</text>
+</svg>

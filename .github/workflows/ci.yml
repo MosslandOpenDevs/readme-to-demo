@@ -53,7 +53,10 @@ jobs:
           test -f demo-brief.md
           grep -q "Project Summary" demo-brief.md
           # `check` exits 0 (all pass) or 2 (gaps found); both are valid, 1 is a real error.
-          readme-to-demo check README.md --json; code=$?; test "$code" -eq 0 -o "$code" -eq 2
+          # `|| code=$?` keeps the step alive under the runner's `bash -e`.
+          code=0
+          readme-to-demo check README.md --json || code=$?
+          test "$code" -eq 0 -o "$code" -eq 2
 
   build:
     runs-on: ubuntu-latest
@@ -70,4 +73,7 @@ jobs:
           python -m venv /tmp/pkgtest
           /tmp/pkgtest/bin/python -m pip install dist/*.whl
           /tmp/pkgtest/bin/readme-to-demo --version
-          /tmp/pkgtest/bin/readme-to-demo check README.md --json; code=$?; test "$code" -eq 0 -o "$code" -eq 2
+          # `check` exits 2 on gaps by design; only 1 is a real error (see above).
+          code=0
+          /tmp/pkgtest/bin/readme-to-demo check README.md --json || code=$?
+          test "$code" -eq 0 -o "$code" -eq 2

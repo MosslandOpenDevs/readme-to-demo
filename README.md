@@ -4,6 +4,10 @@ Turn a raw GitHub README into a cleaner demo-oriented project brief.
 
 > Extract installation, run steps, screenshots, FAQ candidates, and a launch-friendly summary from messy repository documentation.
 
+[![CI](https://github.com/MosslandOpenDevs/readme-to-demo/actions/workflows/ci.yml/badge.svg)](https://github.com/MosslandOpenDevs/readme-to-demo/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 ---
 
 ## The problem
@@ -32,28 +36,40 @@ That creates friction for:
 </table>
 
 ### Demo flow
-1. Paste a README file or local markdown path
-2. Extract key operational sections
-3. Output a cleaner demo-ready markdown summary
+1. Point the tool at a README — local path, `http(s)` URL, or `owner/repo` shorthand
+2. Extract key operational sections and score launch readiness
+3. Output a cleaner demo-ready markdown brief (or a readiness report)
 
 ---
 
 ## 3-step how it works
 
-### 1) Parse the README
-The tool reads markdown input and scans for operational sections such as installation, usage, screenshots, examples, and FAQ-like content.
+### 1) Read the README
+The tool accepts a local markdown path, an `http(s)` URL, or a GitHub `owner/repo`
+shorthand (it fetches the repository's README for you) and parses it into a real
+CommonMark/GFM syntax tree. Because it works on an AST rather than line-by-line
+regex, it gets the tricky cases right: `#` inside a code fence is code (not a
+heading), setext (underline) headings are recognized, reference-style images
+resolve to their target, and screenshots embedded as raw HTML `<img>` are found.
 
 ### 2) Normalize the structure
-It groups useful content into a stable public-repo format:
+It groups useful content into a stable public-repo format, keeping the **source
+line** each element came from:
 
-- project summary
-- install steps
-- run steps
-- demo assets
+- project summary (first real prose paragraph, badges skipped)
+- install steps (section-aware, with command-block fallback)
+- run steps (classified by command, e.g. `pip install` vs `npm run`)
+- demo assets (screenshots only — badges filtered out)
 - FAQ candidates
+- launch-readiness checklist
+- broken local image links (referenced but missing on disk)
 
 ### 3) Generate a demo-ready brief
-It outputs a markdown file that is easier to use for project landing pages, launch docs, quick demos, and contributor onboarding.
+It outputs a markdown brief for project landing pages, launch docs, quick demos,
+and contributor onboarding. Each extracted install/usage block cites where it came
+from (`README.md:L42`), missing assets are flagged, and the brief ends with a
+launch checklist and gap-aware cleanup suggestions. Use `check` when you only want
+the readiness score.
 
 ---
 
@@ -73,9 +89,86 @@ It outputs a markdown file that is easier to use for project landing pages, laun
 
 ## Quickstart
 
+Install the package (editable install for local development):
+
 ```bash
+pip install -e .
+```
+
+Convert a README into a demo brief:
+
+```bash
+# From a local file, writing to disk
+readme-to-demo convert README.md --output demo-brief.md
+
+# From a local file, printing to stdout (omit --output)
+readme-to-demo convert README.md
+
+# From a public URL or a GitHub owner/repo shorthand
+readme-to-demo convert https://raw.githubusercontent.com/octocat/Hello-World/HEAD/README
+readme-to-demo convert octocat/Hello-World
+```
+
+Score a README's launch readiness:
+
+```bash
+readme-to-demo check README.md          # human-readable checklist + score
+readme-to-demo check README.md --json   # machine-readable JSON
+```
+
+Prefer not to install the package? Grab its single dependency and run from source:
+
+```bash
+pip install markdown-it-py
 PYTHONPATH=src python3 -m readme_to_demo.cli convert README.md --output demo-brief.md
 ```
+
+> `check` exits `0` when every item passes and `2` when gaps remain, so it fits
+> cleanly into CI as a documentation-quality gate.
+
+---
+
+## See it work
+
+This is real output — the tool scoring its own README (`readme-to-demo check README.md`):
+
+```text
+# Launch Readiness: readme-to-demo
+
+Score: 8 / 9
+
+- [x] Project title (H1)
+- [x] One-paragraph summary
+- [x] Installation instructions
+- [x] Usage / run steps
+- [x] Runnable code example
+- [x] Screenshot or demo image
+- [ ] FAQ / troubleshooting
+- [x] License section
+- [x] Status badges
+```
+
+And an excerpt of a generated brief — note the **source-line provenance** and the
+**missing-asset warning** (`readme-to-demo convert sample_input.md`):
+
+````markdown
+## Installation
+```bash
+pip install sample-project
+```
+
+_Source: sample_input.md:L7_
+
+## Screenshot Assets
+- ./docs/demo.png
+
+## ⚠️ Missing Local Assets
+- ./docs/demo.png (referenced but not found on disk)
+````
+
+The full example input/output pair lives in
+[`sample_input.md`](./sample_input.md) → [`sample_output.md`](./sample_output.md)
+and is verified byte-for-byte by the test suite.
 
 ---
 
@@ -114,19 +207,25 @@ Long term, this can expand into:
 
 ---
 
-## MVP scope
+## Scope
 
-Current MVP includes:
-- markdown file input
-- lightweight heading-based extraction
-- summary sections for install, usage, screenshots, and FAQ candidates
-- markdown output generation
+Shipped (v0.2):
+- AST-based parsing (`markdown-it-py`) — fence-safe, setext-aware, resolves
+  reference images, finds HTML `<img>` screenshots
+- input from local path, `http(s)` URL, or `owner/repo` shorthand
+- word-aware section detection (`cli` no longer matches `Client`)
+- smarter summary extraction (first real paragraph, badges skipped)
+- command-block classification (install vs run)
+- **source-line provenance** for extracted commands
+- **broken local asset detection**
+- launch-readiness checklist + score (`check`), as text or JSON
+- gap-aware cleanup suggestions; markdown or JSON output
 
 Near-term additions:
-- README URL fetch support
-- richer section detection
-- launch checklist generation
 - template styles for different repo types
+- richer FAQ question/answer synthesis
+- multi-repo batch mode
+- documentation-quality scoring thresholds for CI gating
 
 ---
 
@@ -135,15 +234,22 @@ Near-term additions:
 ```text
 readme-to-demo/
 ├─ README.md
+├─ CHANGELOG.md · CONTRIBUTING.md · SECURITY.md
 ├─ pyproject.toml
+├─ sample_input.md · sample_output.md   # golden example pair
 ├─ src/readme_to_demo/
 │  ├─ __init__.py
-│  ├─ extractor.py
-│  └─ cli.py
+│  ├─ models.py       # Section / CodeBlock / Asset / ParsedReadme
+│  ├─ parser.py       # markdown-it-py AST -> structured, line-tagged model
+│  ├─ extractor.py    # classification, brief + checklist rendering
+│  ├─ sources.py      # local path / URL / owner/repo resolution
+│  └─ cli.py          # convert + check commands
+├─ tests/
+│  ├─ test_parser.py · test_extractor.py · test_sources.py · test_cli.py
+│  ├─ test_dogfood.py  # processes its own README correctly
+│  └─ test_golden.py   # sample_output.md stays in sync
 ├─ docs/assets/
-│  ├─ screenshot-1.svg
-│  ├─ screenshot-2.svg
-│  └─ screenshot-3.svg
+│  ├─ screenshot-1.svg · screenshot-2.svg · screenshot-3.svg
 └─ .github/workflows/ci.yml
 ```
 
@@ -151,25 +257,32 @@ readme-to-demo/
 
 ## Roadmap
 
-### Phase 1
-- local markdown input
-- section extraction
-- demo brief markdown output
+**North star:** grow from *summarizing* a README into *compiling* a repository
+into a reproducible, CI-verified demo pack — analyze → propose a reviewable plan →
+verify it in a sandbox → render evidence. Today the tool does the analysis half
+(and cites its sources); the verification half is deliberately future work, and it
+will always run on an explicit, checked-in plan rather than on remote input.
 
-### Phase 2
-- README URL support
-- better command block extraction
-- structured FAQ generation
+### Phase 1 — done · analysis
+- ✅ local markdown input, section extraction, demo-brief output
+- ✅ URL + `owner/repo` shorthand input
+- ✅ AST parsing, provenance line numbers, broken-asset detection
+- ✅ launch checklist + readiness score (`check`)
 
-### Phase 3
-- repo-type presets
-- launch checklist generation
-- screenshot inventory report
+### Phase 2 — next · reviewable plan
+- ⬜ `inspect` a repo into a `demo.plan.yaml` (each step keeps its README source line)
+- ⬜ per-step assertions (exit code, stdout contains, files exist)
+- ⬜ repo-type presets
 
-### Phase 4
-- web UI
-- batch mode for multiple repos
-- maintainers' documentation scoring
+### Phase 3 — later · verification
+- ⬜ `verify` a plan in a rootless, network-off sandbox
+- ⬜ `demo.lock.json` (commit + environment + result hashes)
+- ⬜ drift detection between README and verified behavior
+
+### Phase 4 — later · rendering
+- ⬜ render adapters (terminal cast, browser capture, evidence doc)
+- ⬜ GitHub Action + PR demo-drift summary
+- ⬜ batch mode for multiple repos
 
 ---
 

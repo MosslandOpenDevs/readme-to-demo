@@ -1,2 +1,9 @@
+# Byte-compiled / caches
 __pycache__/
 *.pyc
+.pytest_cache/
+
+# Build / packaging artifacts
+build/
+dist/
+*.egg-info/

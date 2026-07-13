@@ -2,17 +2,28 @@
 
 A small project that helps users run local demos.
 
+![build](https://img.shields.io/badge/build-passing-brightgreen)
+
 ## Installation
+
 ```bash
-npm install
+pip install sample-project
 ```
 
 ## Usage
+
 ```bash
-npm run dev
+sample-project serve --port 8000
 ```
 
-## FAQ
-This tool is intended for quick demos.
+## Screenshots
 
-![Screenshot](./demo.png)
+<img src="./docs/demo.png" alt="demo screenshot" width="100%" />
+
+## FAQ
+
+This tool is intended for quick demos, not production traffic.
+
+## License
+
+MIT

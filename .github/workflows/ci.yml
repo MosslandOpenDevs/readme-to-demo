@@ -4,28 +4,70 @@ on:
   push:
   pull_request:
 
+# Least-privilege by default; jobs need only to read the repo.
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same ref to save minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  smoke:
+  lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - name: Run conversion smoke test
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Install package with dev extras
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+      - name: Ruff lint
+        run: ruff check .
+      - name: Ruff format check
+        run: ruff format --check .
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    name: test (py${{ matrix.python-version }})
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install package with dev extras
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+      - name: Run tests
+        run: python -m pytest -q
+      - name: CLI smoke test
         run: |
-          cat > sample.md <<'DOC'
-          # Sample Project
-          
-          A small project.
-          
-          ## Installation
-          ```bash
-          npm install
-          ```
-          
-          ## Usage
-          ```bash
-          npm run dev
-          ```
-          DOC
-          PYTHONPATH=src python3 -m readme_to_demo.cli convert sample.md --output out.md
-          test -f out.md
-          grep -q "Project Summary" out.md
+          readme-to-demo convert README.md --output demo-brief.md
+          test -f demo-brief.md
+          grep -q "Project Summary" demo-brief.md
+          # `check` exits 0 (all pass) or 2 (gaps found); both are valid, 1 is a real error.
+          readme-to-demo check README.md --json; code=$?; test "$code" -eq 0 -o "$code" -eq 2
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Build sdist and wheel
+        run: python -m pip install --upgrade build && python -m build
+      - name: Install the built wheel in a clean environment and smoke-test
+        run: |
+          python -m venv /tmp/pkgtest
+          /tmp/pkgtest/bin/python -m pip install dist/*.whl
+          /tmp/pkgtest/bin/readme-to-demo --version
+          /tmp/pkgtest/bin/readme-to-demo check README.md --json; code=$?; test "$code" -eq 0 -o "$code" -eq 2

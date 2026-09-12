@@ -1,12 +1,15 @@
 # readme-to-demo
 
+<!-- opendevs-badges:start -->
+[![CI](https://github.com/MosslandOpenDevs/readme-to-demo/actions/workflows/ci.yml/badge.svg)](https://github.com/MosslandOpenDevs/readme-to-demo/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-64748b?style=flat)](LICENSE)
+<!-- opendevs-badges:end -->
+
 Turn a raw GitHub README into a cleaner demo-oriented project brief.
 
 > Extract installation, run steps, screenshots, FAQ candidates, and a launch-friendly summary from messy repository documentation.
 
-[![CI](https://github.com/MosslandOpenDevs/readme-to-demo/actions/workflows/ci.yml/badge.svg)](https://github.com/MosslandOpenDevs/readme-to-demo/actions/workflows/ci.yml)
-![Python](https://img.shields.io/badge/python-3.11%2B-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue?style=flat)
 
 ---
 
